@@ -15,6 +15,10 @@ new bing 需要用到香港节点，我平常也不用此节点，于是整了�
 ## API
 
 ```go
+func SetSecrete(sec string) {}
+func SetSecreteFromEnv(name string) {}
+func SetSecreteFromFile(file string) error {}
+
 func GetLogs(level LogLevel) (chan *Log, error) {}
 func GetTraffic(handler func(traffic *Traffic) (stop bool)) error {}
 func GetProxies() (map[string]*Proxies, error) {}
@@ -28,3 +32,25 @@ func SetConfig(port, socksPort int, redirPort string, allowLan bool, mode, logLe
 ```
 
  
+
+## Demo
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/obgnail/clash-api/clash"
+)
+
+func main() {
+	clash.SetSecreteFromFile("./secret.txt")
+
+  proxies, err := clash.GetProxies()
+  if err != nil {
+    painc(err)
+  }
+	fmt.Println(proxies)
+}
+```
+

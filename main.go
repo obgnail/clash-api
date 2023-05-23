@@ -67,6 +67,7 @@ func checkError(err error) {
 
 func main() {
 	fmt.Println("-----------")
+	clash.SetSecreteFromFile("./secret.txt")
 	testGetRules()
 
 	//forever := make(chan struct{}, 1)

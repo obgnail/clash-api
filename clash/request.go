@@ -10,39 +10,52 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
-var Secrete = ""
+var url = "http://127.0.0.1:9090"
+var secrete = ""
 
-func getSecrete() (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", errors.Trace(err)
+func SetSecrete(sec string) {
+	secrete = sec
+}
+
+func SetSecreteFromEnv(name string) error {
+	_secrete := os.Getenv(name)
+	if len(_secrete) != 0 {
+		secrete = _secrete
+		return nil
 	}
-	p := filepath.Join(dir, "secret.txt")
-	f, err := ioutil.ReadFile(p)
-	if err != nil {
-		return "", errors.Trace(err)
+	return fmt.Errorf("has no such name")
+}
+
+func SetSecreteFromFile(file string) error {
+	if _, err := os.Stat(file); err != nil && os.IsNotExist(err) {
+		return errors.Trace(err)
 	}
-	return string(f), nil
+
+	content, err := ioutil.ReadFile(file)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	secrete = string(content)
+	return nil
 }
 
 func Request(method, route string, headers map[string]string, body io.Reader) (*http.Response, error) {
 	if !strings.HasPrefix(route, "/") {
 		route = "/" + route
 	}
-	url := "http://127.0.0.1:9090" + route
+	_url := url + route
 	method = strings.ToUpper(method)
 
 	client := &http.Client{}
-	reqObj, err := http.NewRequest(method, url, body)
+	reqObj, err := http.NewRequest(method, _url, body)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 
-	s := fmt.Sprintf("Bearer %s", Secrete)
+	s := fmt.Sprintf("Bearer %s", secrete)
 	reqObj.Header.Add("Authorization", s)
 	for key, value := range headers {
 		reqObj.Header.Add(key, value)
@@ -103,12 +116,4 @@ func HandleStreamResp(resp *http.Response, handler func(line []byte) (stop bool)
 			}
 		}
 	}()
-}
-
-func init() {
-	var err error
-	Secrete, err = getSecrete()
-	if err != nil {
-		panic(err)
-	}
 }
