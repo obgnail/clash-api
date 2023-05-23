@@ -3,14 +3,16 @@
 <p align="center">
     <img src="assets/nijika.png" width="450" height="450">
 </p>
+本项目是对 [clash doc](https://clash.gitbook.io/doc/) 的翻译。我丢，搬砖活。
+
 
 
 
 ## Introduction
 
-new bing 需要用到香港节点，我平常也不用此节点，于是整了个自动切换脚本。开源 RESTful API 部分。
+> Clash RESTful API 是一套控制 Clash 的一个途径，能获取 Clash 中的一些信息，同时也能控制 Clash 内部的配置。基于 API，可以打造自己的可视化操作部分，也是实现 Clash GUI 的重要组成部分。—— Clash doc
 
-> doc：https://clash.gitbook.io/doc/
+因为 new bing 需要用到香港节点，我平常也不用此节点，于是整了个自动切换脚本。开源 RESTful API 部分。
 
 
 
