@@ -6,34 +6,56 @@
 
 
 
-## 简介
+## Introduction
 
-new bing 需要用到香港节点，我平常也不用此节点，于是整了个自动切换脚本。开源 RESTFUL API 部分。
+new bing 需要用到香港节点，我平常也不用此节点，于是整了个自动切换脚本。开源 RESTful API 部分。
+
+> doc：https://clash.gitbook.io/doc/
 
 
 
 ## API
 
 ```go
+// 设置密钥(调用业务接口前必须调用此接口)
 func SetSecrete(sec string) {}
 func SetSecreteFromEnv(name string) {}
 func SetSecreteFromFile(file string) error {}
 
+// 监控请求日志
 func GetLogs(level LogLevel) (chan *Log, error) {}
+
+// 每秒推送一次，上下载流量
 func GetTraffic(handler func(traffic *Traffic) (stop bool)) error {}
+
+// 节点列表
 func GetProxies() (map[string]*Proxies, error) {}
+
+// 具体节点的信息
 func GetProxyMessage(name string) (*Proxy, error) {}
+
+// 测试具体节点的延时
 func GetProxyDelay(name string, url string, timeout int) (*ProxyDelay, error) {}
+
+// 切换节点
 func SwitchProxy(selector, name string) error {}
+
+// 获取配置
 func GetConfig() (*Config, error) {}
-func GetRules() ([]*Rule, error) {}
-func EnableConfig(path string) error {}
+
+// 设置配置
 func SetConfig(port, socksPort int, redirPort string, allowLan bool, mode, logLevel string) error {}
+
+// 应用配置(不会影响 external-controller 和 secret 的值)
+func EnableConfig(path string) error {}
+
+// PAC rules
+func GetRules() ([]*Rule, error) {}
 ```
 
  
 
-## Demo
+## Example
 
 ```go
 package main
