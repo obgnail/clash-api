@@ -3,7 +3,9 @@
 <p align="center">
     <img src="assets/nijika.png" width="450" height="450">
 </p>
-本项目是对 [clash doc](https://clash.gitbook.io/doc/) 的翻译。我丢，搬砖活。
+
+
+本项目是 [Clash RESTful API](https://clash.gitbook.io/doc) 的 golang 实现。我丢，搬砖活。
 
 
 
