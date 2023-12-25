@@ -21,6 +21,9 @@
 ## API
 
 ```go
+// 默认url为http://127.0.0.1:9090，如需修改，请调用此函数
+func SetURL(URL string) {}
+
 // 设置密钥(调用业务接口前必须调用此接口)
 func SetSecrete(sec string) {}
 func SetSecreteFromEnv(name string) {}

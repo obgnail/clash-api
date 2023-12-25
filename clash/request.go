@@ -16,6 +16,10 @@ import (
 var url = "http://127.0.0.1:9090"
 var secrete = ""
 
+func SetURL(URL string) {
+	url = URL
+}
+
 func SetSecrete(sec string) {
 	secrete = sec
 }
