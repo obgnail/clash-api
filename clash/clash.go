@@ -254,3 +254,17 @@ func SetConfig(port, socksPort int, redirPort string, allowLan bool, mode, logLe
 	}
 	return nil
 }
+
+type Version struct {
+	Meta    bool   `json:"meta"`
+	Version string `json:"version"`
+}
+
+func GetVersion() (*Version, error) {
+	version := &Version{}
+	err := UnmarshalRequest("get", "/version", nil, nil, &version)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	return version, nil
+}
