@@ -1,80 +1,43 @@
 package clash
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/juju/errors"
 )
 
-type Tun struct {
-	Enable              bool     `json:"enable"`
-	Device              string   `json:"device"`
-	Stack               string   `json:"stack"`
-	DNSHijack           []string `json:"dns-hijack"`
-	AutoRoute           bool     `json:"auto-route"`
-	AutoDetectInterface bool     `json:"auto-detect-interface"`
-	MTU                 int      `json:"mtu"`
-	GSOMaxSize          int      `json:"gso-max-size"`
-	Inet4Address        []string `json:"inet4-address"`
-	StrictRoute         bool     `json:"strict-route"`
-	FileDescriptor      int      `json:"file-descriptor"`
-}
+// RawConfigs (map 指针)存储 GetConfigs() 获取的 Clash 配置
+type RawConfigs map[string]interface{}
 
-type MuxOption struct {
-	Brutal struct {
-		Enabled bool `json:"enabled"`
-	} `json:"brutal"`
-}
-
-type TuicServer struct {
-	Enable      bool      `json:"enable"`
-	Listen      string    `json:"listen"`
-	Certificate string    `json:"certificate"`
-	PrivateKey  string    `json:"private-key"`
-	MuxOption   MuxOption `json:"mux-option"`
-}
-
-type Configs struct {
-	Port                    int               `json:"port"`
-	SocksPort               int               `json:"socks-port"`
-	RedirPort               int               `json:"redir-port"`
-	TProxyPort              int               `json:"tproxy-port"`
-	MixedPort               int               `json:"mixed-port"`
-	Tun                     Tun               `json:"tun"`
-	TuicServer              TuicServer        `json:"tuic-server"`
-	SSConfig                string            `json:"ss-config"`
-	VmessConfig             string            `json:"vmess-config"`
-	Authentication          interface{}       `json:"authentication"`
-	SkipAuthPrefixes        []string          `json:"skip-auth-prefixes"`
-	LanAllowedIPs           []string          `json:"lan-allowed-ips"`
-	LanDisallowedIPs        interface{}       `json:"lan-disallowed-ips"`
-	AllowLAN                bool              `json:"allow-lan"`
-	BindAddress             string            `json:"bind-address"`
-	InboundTFO              bool              `json:"inbound-tfo"`
-	InboundMPTCP            bool              `json:"inbound-mptcp"`
-	Mode                    string            `json:"mode"`
-	UnifiedDelay            bool              `json:"UnifiedDelay"`
-	LogLevel                string            `json:"log-level"`
-	IPv6                    bool              `json:"ipv6"`
-	InterfaceName           string            `json:"interface-name"`
-	GeoxURL                 map[string]string `json:"geox-url"`
-	GeoAutoUpdate           bool              `json:"geo-auto-update"`
-	GeoUpdateInterval       int               `json:"geo-update-interval"`
-	GeodataMode             bool              `json:"geodata-mode"`
-	GeodataLoader           string            `json:"geodata-loader"`
-	TCPConcurrent           bool              `json:"tcp-concurrent"`
-	FindProcessMode         string            `json:"find-process-mode"`
-	Sniffing                bool              `json:"sniffing"`
-	GlobalClientFingerprint string            `json:"global-client-fingerprint"`
-	GlobalUA                string            `json:"global-ua"`
-}
-
-func GetConfigs() (*Configs, error) {
-	configs := &Configs{}
-	err := UnmarshalRequest("get", "/configs", nil, nil, &configs)
-	if err != nil {
+func GetConfigs() (RawConfigs, error) {
+	raw := RawConfigs{}
+	code, content, err := EasyRequest("get", "/configs", nil, nil)
+	if code != 200 || err != nil {
 		return nil, errors.Trace(err)
 	}
-	return configs, nil
+	err = json.Unmarshal(content, &raw)
+	return raw, err
+}
+
+func IsTunEnabled(raw RawConfigs) (bool, error) {
+	tunField, ok := raw["tun"].(map[string]interface{})
+	if !ok {
+		return false, fmt.Errorf("raw has not tun field")
+	}
+	enable, ok := tunField["enable"].(bool)
+	if !ok {
+		return false, fmt.Errorf("tun field has not enable field")
+	}
+	return enable, nil
+}
+
+func SetTunEnable(enable bool) error {
+	raw := RawConfigs{
+		"tun": RawConfigs{
+			"enable": enable,
+		},
+	}
+	return SetConfigs(raw)
 }
 
 // EnableConfigs 这个接口不会影响 external-controller 和 secret 的值
@@ -86,24 +49,29 @@ func EnableConfigs(path string) error {
 	if err != nil {
 		return errors.Trace(err)
 	}
-	if code != 200 {
+	if code < 200 || code >= 300 {
 		return fmt.Errorf("unknown error: %s", string(content))
 	}
 	return nil
 }
 
-// SetConfigs 更新基本配置，传入需要修改的配置即可，传入的数据需以 json 格式传入
+// SetConfigs 更新基本配置，只传入需要修改的配置即可，传入的数据需以 json 格式传入
 //
 // 命令行调用示例：curl ${controller-api}/configs -X PATCH -d '{"mixed-port": 7890}'
-func SetConfigs(body map[string]interface{}) error {
+// 参数示例:
+//
+//	raw := RawConfigs{
+//	  "port":       2333,
+//	  "socks-port": 2334,
+//	  }
+func SetConfigs(raw RawConfigs) error {
 	headers := map[string]string{"Content-Type": "application/json"}
-
-	code, content, err := EasyRequest("patch", "/configs", headers, body)
+	code, _, err := EasyRequest("patch", "/configs", headers, raw)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	if code != 200 {
-		return fmt.Errorf("unknown error: %s", string(content))
+	if code < 200 || code >= 300 {
+		return fmt.Errorf("return code: %d", code)
 	}
 	return nil
 }
@@ -114,7 +82,7 @@ func EnableGeo() error {
 	if err != nil {
 		return errors.Trace(err)
 	}
-	if code != 200 {
+	if code < 200 || code >= 300 {
 		return fmt.Errorf("unknown error: %s", string(content))
 	}
 	return nil

@@ -179,29 +179,6 @@ func SwitchProxy(selector, name string) error {
 	}
 }
 
-type Config struct {
-	Port           int      `json:"port"`
-	SocksPort      int      `json:"socks-port"`
-	RedirPort      int      `json:"redir-port"`
-	TproxyPort     int      `json:"tproxy-port"`
-	MixedPort      int      `json:"mixed-port"`
-	Authentication []string `json:"authentication"`
-	AllowLan       bool     `json:"allow-lan"`
-	BindAddress    string   `json:"bind-address"`
-	Mode           string   `json:"mode"`
-	LogLevel       string   `json:"log-level"`
-	IPV6           bool     `json:"ipv6"`
-}
-
-func GetConfig() (*Config, error) {
-	config := &Config{}
-	err := UnmarshalRequest("get", "/configs", nil, nil, &config)
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	return config, nil
-}
-
 type Rule struct {
 	Type    string `json:"type"`
 	Payload string `json:"payload"`
@@ -217,42 +194,6 @@ func GetRules() ([]*Rule, error) {
 		return nil, errors.Trace(err)
 	}
 	return container.Rules, nil
-}
-
-// EnableConfig 这个接口不会影响 external-controller 和 secret 的值
-func EnableConfig(path string) error {
-	headers := map[string]string{"Content-Type": "application/json"}
-	body := map[string]interface{}{"path": path}
-
-	code, content, err := EasyRequest("put", "/configs", headers, body)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	if code != 200 {
-		return fmt.Errorf("unknown error: %s", string(content))
-	}
-	return nil
-}
-
-func SetConfig(port, socksPort int, redirPort string, allowLan bool, mode, logLevel string) error {
-	headers := map[string]string{"Content-Type": "application/json"}
-	body := map[string]interface{}{
-		"port":       port,
-		"socks-port": socksPort,
-		"redir-port": redirPort,
-		"allow-lan":  allowLan,
-		"mode":       mode,
-		"log-level":  logLevel,
-	}
-
-	code, content, err := EasyRequest("patch", "/configs", headers, body)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	if code != 200 {
-		return fmt.Errorf("unknown error: %s", string(content))
-	}
-	return nil
 }
 
 // Version Clash 版本信息
