@@ -300,7 +300,7 @@ func GetMemory(handler func(memory *Memory) (stop bool)) error {
 }
 
 // Restart 重启内核
-func Restart(path string) error {
+func Restart() error {
 	code, content, err := EasyRequest("post", "/restart", nil, nil)
 	if err != nil {
 		return errors.Trace(err)
