@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	if err := clash.SetSecreteFromFile("./secret.txt"); err != nil {
+	if err := clash.SetSecretFromEnv("clash-api-secret"); err != nil {
 		panic(err)
 	}
 

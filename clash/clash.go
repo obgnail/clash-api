@@ -255,11 +255,13 @@ func SetConfig(port, socksPort int, redirPort string, allowLan bool, mode, logLe
 	return nil
 }
 
+// Version Clash 版本信息
 type Version struct {
 	Meta    bool   `json:"meta"`
 	Version string `json:"version"`
 }
 
+// GetVersion 获取 Clash 版本信息
 func GetVersion() (*Version, error) {
 	version := &Version{}
 	err := UnmarshalRequest("get", "/version", nil, nil, &version)
@@ -267,4 +269,44 @@ func GetVersion() (*Version, error) {
 		return nil, errors.Trace(err)
 	}
 	return version, nil
+}
+
+// Memory 内存占用，单位 kb
+//
+// 示例: {"inuse":111673344,"oslimit":0}
+type Memory struct {
+	Inuse   uint64 `json:"inuse"`
+	OsLimit uint64 `json:"oslimit"`
+}
+
+// GetMemory 获取实时内存占用，单位 kb
+func GetMemory(handler func(memory *Memory) (stop bool)) error {
+	resp, err := Request("get", "/memory", nil, nil)
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	HandleStreamResp(resp, func(line []byte) (stop bool) {
+		memory := &Memory{}
+		if err := json.Unmarshal(line, memory); err != nil {
+			return true
+		}
+		if _stop := handler(memory); _stop {
+			return true
+		}
+		return false
+	})
+	return nil
+}
+
+// Restart 重启内核
+func Restart(path string) error {
+	code, content, err := EasyRequest("post", "/restart", nil, nil)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	if code != 200 {
+		return fmt.Errorf("unknown error: %s", string(content))
+	}
+	return nil
 }

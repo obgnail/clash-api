@@ -85,3 +85,7 @@ func main() {
 }
 ```
 
+## Processing
+
+- [x] 支持 Meta (mihomo) 内核 API
+  > 以最新 Meta Alpha 内核及 Metacubexd 的代码实现为准，Meta Wiki 为辅

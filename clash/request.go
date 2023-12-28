@@ -13,21 +13,21 @@ import (
 	"strings"
 )
 
-var url = "http://127.0.0.1:9090"
-var secrete = ""
+var Url = "http://127.0.0.1:9090"
+var Secret = ""
 
-func SetURL(URL string) {
-	url = URL
+func SetURL(url string) {
+	Url = url
 }
 
-func SetSecrete(sec string) {
-	secrete = sec
+func SetSecrete(secret string) {
+	Secret = secret
 }
 
 func SetSecreteFromEnv(name string) error {
 	_secrete := os.Getenv(name)
 	if len(_secrete) != 0 {
-		secrete = _secrete
+		Secret = _secrete
 		return nil
 	}
 	return fmt.Errorf("has no such name")
@@ -42,7 +42,7 @@ func SetSecreteFromFile(file string) error {
 	if err != nil {
 		return errors.Trace(err)
 	}
-	secrete = string(content)
+	Secret = string(content)
 	return nil
 }
 
@@ -50,7 +50,7 @@ func Request(method, route string, headers map[string]string, body io.Reader) (*
 	if !strings.HasPrefix(route, "/") {
 		route = "/" + route
 	}
-	_url := url + route
+	_url := Url + route
 	method = strings.ToUpper(method)
 
 	client := &http.Client{}
@@ -59,7 +59,7 @@ func Request(method, route string, headers map[string]string, body io.Reader) (*
 		return nil, errors.Trace(err)
 	}
 
-	s := fmt.Sprintf("Bearer %s", secrete)
+	s := fmt.Sprintf("Bearer %s", Secret)
 	reqObj.Header.Add("Authorization", s)
 	for key, value := range headers {
 		reqObj.Header.Add(key, value)
