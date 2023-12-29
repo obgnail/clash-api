@@ -3,9 +3,10 @@ package clash
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/juju/errors"
 	"regexp"
 	"strings"
+
+	"github.com/juju/errors"
 )
 
 var reg = regexp.MustCompile(`\[(.+?)\](.+?)lAddr=(.+?)rAddr=(.+?)mode=(.+?)rule=(.+?)proxy=(.+)`)
@@ -243,6 +244,20 @@ func GetMemory(handler func(memory *Memory) (stop bool)) error {
 // Restart 重启内核
 func Restart() error {
 	code, content, err := EasyRequest("post", "/restart", nil, nil)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	if code != 200 {
+		return fmt.Errorf("unknown error: %s", string(content))
+	}
+	return nil
+}
+
+// Shutdown 关闭内核
+//
+// 待内核合并 PR 后可用
+func Shutdown() error {
+	code, content, err := EasyRequest("post", "/shutdown", nil, nil)
 	if err != nil {
 		return errors.Trace(err)
 	}
