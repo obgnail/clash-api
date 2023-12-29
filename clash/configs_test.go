@@ -26,3 +26,18 @@ func TestSetTunEnable(t *testing.T) {
 		return
 	}
 }
+
+func TestGetPorts(t *testing.T) {
+	raw := RawConfigs{
+		"tun": RawConfigs{
+			"enable": false,
+		},
+		"port":        8080,
+		"socks-port":  1080,
+		"redir-port":  8081,
+		"tproxy-port": 8082,
+		"mixed-port":  8083,
+	}
+	ports, err := GetPorts(raw)
+	t.Logf("Ports: %+v\n Error: %+v", ports, err)
+}

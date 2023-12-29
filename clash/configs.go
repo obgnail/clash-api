@@ -87,3 +87,23 @@ func EnableGeo() error {
 	}
 	return nil
 }
+
+type Ports struct {
+	Port       int `json:"port"`
+	SocksPort  int `json:"socks-port"`
+	RedirPort  int `json:"redir-port"`
+	TProxyPort int `json:"tproxy-port"`
+	MixedPort  int `json:"mixed-port"`
+}
+
+// 获取端口信息
+func GetPorts(raw RawConfigs) (Ports, error) {
+	var ports Ports
+	rawData, err := json.Marshal(raw)
+	if err != nil {
+		// 这里不应该出错
+		return ports, errors.Trace(err)
+	}
+	err = json.Unmarshal(rawData, &ports)
+	return ports, err
+}
