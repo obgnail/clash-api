@@ -3,9 +3,10 @@ package clash
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/juju/errors"
 	"regexp"
 	"strings"
+
+	"github.com/juju/errors"
 )
 
 var reg = regexp.MustCompile(`\[(.+?)\](.+?)lAddr=(.+?)rAddr=(.+?)mode=(.+?)rule=(.+?)proxy=(.+)`)
@@ -179,29 +180,6 @@ func SwitchProxy(selector, name string) error {
 	}
 }
 
-type Config struct {
-	Port           int      `json:"port"`
-	SocksPort      int      `json:"socks-port"`
-	RedirPort      int      `json:"redir-port"`
-	TproxyPort     int      `json:"tproxy-port"`
-	MixedPort      int      `json:"mixed-port"`
-	Authentication []string `json:"authentication"`
-	AllowLan       bool     `json:"allow-lan"`
-	BindAddress    string   `json:"bind-address"`
-	Mode           string   `json:"mode"`
-	LogLevel       string   `json:"log-level"`
-	IPV6           bool     `json:"ipv6"`
-}
-
-func GetConfig() (*Config, error) {
-	config := &Config{}
-	err := UnmarshalRequest("get", "/configs", nil, nil, &config)
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	return config, nil
-}
-
 type Rule struct {
 	Type    string `json:"type"`
 	Payload string `json:"payload"`
@@ -219,47 +197,13 @@ func GetRules() ([]*Rule, error) {
 	return container.Rules, nil
 }
 
-// EnableConfig 这个接口不会影响 external-controller 和 secret 的值
-func EnableConfig(path string) error {
-	headers := map[string]string{"Content-Type": "application/json"}
-	body := map[string]interface{}{"path": path}
-
-	code, content, err := EasyRequest("put", "/configs", headers, body)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	if code != 200 {
-		return fmt.Errorf("unknown error: %s", string(content))
-	}
-	return nil
-}
-
-func SetConfig(port, socksPort int, redirPort string, allowLan bool, mode, logLevel string) error {
-	headers := map[string]string{"Content-Type": "application/json"}
-	body := map[string]interface{}{
-		"port":       port,
-		"socks-port": socksPort,
-		"redir-port": redirPort,
-		"allow-lan":  allowLan,
-		"mode":       mode,
-		"log-level":  logLevel,
-	}
-
-	code, content, err := EasyRequest("patch", "/configs", headers, body)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	if code != 200 {
-		return fmt.Errorf("unknown error: %s", string(content))
-	}
-	return nil
-}
-
+// Version Clash 版本信息
 type Version struct {
 	Meta    bool   `json:"meta"`
 	Version string `json:"version"`
 }
 
+// GetVersion 获取 Clash 版本信息
 func GetVersion() (*Version, error) {
 	version := &Version{}
 	err := UnmarshalRequest("get", "/version", nil, nil, &version)
@@ -267,4 +211,58 @@ func GetVersion() (*Version, error) {
 		return nil, errors.Trace(err)
 	}
 	return version, nil
+}
+
+// Memory 内存占用，单位 kb
+//
+// 示例: {"inuse":111673344,"oslimit":0}
+type Memory struct {
+	Inuse   uint64 `json:"inuse"`
+	OsLimit uint64 `json:"oslimit"`
+}
+
+// GetMemory 获取实时内存占用，单位 kb
+func GetMemory(handler func(memory *Memory) (stop bool)) error {
+	resp, err := Request("get", "/memory", nil, nil)
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	HandleStreamResp(resp, func(line []byte) (stop bool) {
+		memory := &Memory{}
+		if err := json.Unmarshal(line, memory); err != nil {
+			return true
+		}
+		if _stop := handler(memory); _stop {
+			return true
+		}
+		return false
+	})
+	return nil
+}
+
+// Restart 重启内核
+func Restart() error {
+	code, content, err := EasyRequest("post", "/restart", nil, nil)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	if code != 200 {
+		return fmt.Errorf("unknown error: %s", string(content))
+	}
+	return nil
+}
+
+// Shutdown 关闭内核
+//
+// 待内核合并 PR 后可用
+func Shutdown() error {
+	code, content, err := EasyRequest("post", "/shutdown", nil, nil)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	if code != 200 {
+		return fmt.Errorf("unknown error: %s", string(content))
+	}
+	return nil
 }
