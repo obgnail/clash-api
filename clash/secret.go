@@ -7,14 +7,16 @@ import (
 	"os"
 )
 
+var Secret = ""
+
 func SetSecret(secret string) {
 	Secret = secret
 }
 
 func SetSecretFromEnv(name string) error {
-	_secrete := os.Getenv(name)
-	if len(_secrete) != 0 {
-		Secret = _secrete
+	secrete := os.Getenv(name)
+	if len(secrete) != 0 {
+		Secret = secrete
 		return nil
 	}
 	return fmt.Errorf("has no such name")

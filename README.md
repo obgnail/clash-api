@@ -25,9 +25,9 @@
 func SetURL(URL string) {}
 
 // 设置密钥(调用业务接口前必须调用此接口)
-func SetSecrete(sec string) {}
-func SetSecreteFromEnv(name string) {}
-func SetSecreteFromFile(file string) error {}
+func SetSecret(sec string) {}
+func SetSecretFromEnv(name string) error {}
+func SetSecretFromFile(file string) error {}
 
 // 监控请求日志
 func GetLogs(level LogLevel) (chan *Log, error) {}
@@ -73,7 +73,7 @@ import (
 )
 
 func main() {
-	if err := clash.SetSecreteFromFile("./secret.txt"); err != nil {
+	if err := clash.SetSecretFromFile("./secret.txt"); err != nil {
 		panic(err)
 	}
 

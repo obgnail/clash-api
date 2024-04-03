@@ -9,41 +9,13 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 )
 
 var Url = "http://127.0.0.1:9090"
-var Secret = ""
 
 func SetURL(url string) {
 	Url = url
-}
-
-func SetSecrete(secret string) {
-	Secret = secret
-}
-
-func SetSecreteFromEnv(name string) error {
-	_secrete := os.Getenv(name)
-	if len(_secrete) != 0 {
-		Secret = _secrete
-		return nil
-	}
-	return fmt.Errorf("has no such name")
-}
-
-func SetSecreteFromFile(file string) error {
-	if _, err := os.Stat(file); err != nil && os.IsNotExist(err) {
-		return errors.Trace(err)
-	}
-
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		return errors.Trace(err)
-	}
-	Secret = string(content)
-	return nil
 }
 
 func Request(method, route string, headers map[string]string, body io.Reader) (*http.Response, error) {
